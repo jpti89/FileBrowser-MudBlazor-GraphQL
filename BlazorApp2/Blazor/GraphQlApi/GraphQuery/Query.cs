@@ -1,7 +1,7 @@
 ﻿using BlazorApp2.Blazor.Services.BuisnessLogic.Interfaces;
 using BlazorApp2.SharedCode.Models.Partials;
 
-namespace BlazorApp2.Blazor.GraphQL
+namespace BlazorApp2.Blazor.GraphQlApi.GraphQuery
 {
     public class Query
     {

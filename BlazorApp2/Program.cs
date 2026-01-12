@@ -1,8 +1,8 @@
 using BlazorApp2.Blazor;
-using BlazorApp2.Blazor.GraphQL;
 using MudBlazor.Services;
 using BlazorApp2.Blazor.Services.BuisnessLogic.Interfaces;
 using BlazorApp2.Blazor.Services.BuisnessLogic.Implementations;
+using BlazorApp2.Blazor.GraphQlApi.GraphQuery;
 
 var builder = WebApplication.CreateBuilder(args);
 
