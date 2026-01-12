@@ -1,7 +1,7 @@
-﻿using BlazorApp2.Blazor.Services.BuisnessLogic.Interfaces;
+﻿using BlazorApp2.Services.BuisnessLogic.Interfaces;
 using BlazorApp2.SharedCode.Models.Partials;
 
-namespace BlazorApp2.Blazor.Services.BuisnessLogic.Implementations
+namespace BlazorApp2.Services.BuisnessLogic.Implementations
 {
     public class FileSystemService : IFileSystemService
     {

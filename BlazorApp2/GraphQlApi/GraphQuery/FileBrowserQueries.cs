@@ -1,10 +1,10 @@
 ﻿using GraphQL;
 using GraphQL.Types;
-using BlazorApp2.Blazor.Services.BuisnessLogic.Interfaces;
 using BlazorApp2.SharedCode.Models.Partials;
-using BlazorApp2.Blazor.GraphQlApi.GraphType;
+using BlazorApp2.GraphQlApi.GraphType;
+using BlazorApp2.Services.BuisnessLogic.Interfaces;
 
-namespace BlazorApp2.Blazor.GraphQlApi.GraphQuery
+namespace BlazorApp2.GraphQlApi.GraphQuery
 {
     public static class FileSystemQuery
     {

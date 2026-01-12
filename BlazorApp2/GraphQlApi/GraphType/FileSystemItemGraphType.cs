@@ -1,7 +1,7 @@
 ﻿using GraphQL.Types;
 using BlazorApp2.SharedCode.Models.Partials;
 
-namespace BlazorApp2.Blazor.GraphQlApi.GraphType
+namespace BlazorApp2.GraphQlApi.GraphType
 {
     public class FileSystemItemGraphType : ObjectGraphType<FileSystemItem>
     {
