@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <GraphQL Remove="components\queries\FileSystem.graphql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <GraphQLConfig Remove=".graphqlrc.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.11" />
+    <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="15.1.11" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+    <PackageReference Include="MudBlazor" Version="8.15.0" />
+    <PackageReference Include="StrawberryShake.CodeGeneration.CSharp.Analyzers" Version="12.22.6" />
+    <PackageReference Include="StrawberryShake.Transport.Http" Version="15.1.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Components\Queries\" />
+  </ItemGroup>
+
+</Project>

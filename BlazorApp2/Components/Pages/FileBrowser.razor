@@ -1,0 +1,151 @@
+﻿@page "/file-browser"
+@rendermode InteractiveServer
+@inject IFileSystemService FileSystemService
+@using BlazorApp2.Components.Services
+@using BlazorApp2.Components.Models
+@using MudBlazor
+
+<MudPopoverProvider />
+<MudDialogProvider />
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">File Browser</MudText>
+
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-2">Select Drive</MudText>
+
+                @if (isLoadingDrives)
+                {
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                }
+                else if (drives != null)
+                {
+                    <MudSelect T="string" Label="Available Drives" @bind-Value="selectedDrive"
+                               Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var drive in drives)
+                        {
+                            <MudSelectItem Value="@drive">@drive</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               OnClick="@OnButtonClick" Class="mt-2"
+                               Disabled="string.IsNullOrEmpty(selectedDrive)">
+                        Load Directory Tree
+                    </MudButton>
+                }
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Class="mt-2">@errorMessage</MudAlert>
+                }
+
+                @if (treeItems.Any())
+                {
+                    <MudDialog @bind-Visible="_visible" Options="_dialogOptions">
+                        <TitleContent>
+                    <MudText Typo="Typo.h6" Class="mt-4 mb-2">Directory Tree</MudText>
+                        </TitleContent>
+                        <DialogContent>
+
+                    <MudPaper Elevation="0" Class="pa-2" Style="max-height: 500px; overflow-y: auto;">
+                                <MudMenu ActivationEvent="@MouseEvent.RightClick" PositionAtCursor=true>
+                            <ActivatorContent>
+                                <MudTreeView T="string" 
+                                    SelectedValue="selectedTreeItem" 
+                                    SelectedValueChanged="OnSelectedValueChanged" 
+                                    ExpandOnClick=true
+                                    Hover="true">
+                                    @foreach (var item in treeItems)
+                                    {
+                                        @RenderTreeNode(item)
+                                    }
+                                </MudTreeView>
+                            </ActivatorContent>
+                                    <ChildContent>
+                                        <MudMenuItem Label="Add Folder" OnClick="AddToIncluded" />
+                                        <MudMenuItem Label="Exclude Folder" OnClick="AddToExcluded" />
+                                    </ChildContent>
+                        </MudMenu>
+                    </MudPaper>
+                        </DialogContent>
+                        <DialogActions>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Class="px-10">Close</MudButton>
+                        </DialogActions>
+                    </MudDialog>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-2">Selected Folders</MudText>
+
+                
+
+                <MudDivider Class="my-2" />
+
+                <MudText Typo="Typo.subtitle1" Color="Color.Success" Class="mb-2">
+                    <strong>Included Paths (@includedPaths.Count)</strong>
+                </MudText>
+                <MudList T="string" Dense="true">
+                    @foreach (var path in includedPaths)
+                    {
+                        <MudListItem T="string">
+                            <div class="d-flex justify-space-between align-center">
+                                <MudText>@path</MudText>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Size="Size.Small"
+                                               Color="Color.Error"
+                                               OnClick="@(() => RemoveFromIncluded(path))" />
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.subtitle1" Color="Color.Error" Class="mb-2">
+                    <strong>Excluded Paths (@excludedPaths.Count)</strong>
+                </MudText>
+                <MudList T="string" Dense="true">
+                    @foreach (var path in excludedPaths)
+                    {
+                        <MudListItem T="string">
+                            <div class="d-flex justify-space-between align-center">
+                                <MudText>@path</MudText>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Size="Size.Small"
+                                               Color="Color.Error"
+                                               OnClick="@(() => RemoveFromExcluded(path))" />
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+
+                <MudDivider Class="my-6" />
+                <MudText Typo="Typo.subtitle1" Color="Color.Success" Class="mb-2">
+                    <strong>File Extensions</strong>
+                </MudText>
+                <MudSelect MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))" 
+                             MultiSelection="true" 
+                             @bind-Value="value"
+                             @bind-SelectedValues="options" 
+                             T="string" 
+                             AdornmentIcon="@Icons.Material.Filled.Search">
+                    @foreach (var extension in extensions)
+                    {
+                        <MudSelectItem T="string" Value="@extension">@extension</MudSelectItem>
+                    }
+                </MudSelect>
+
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+
+}
