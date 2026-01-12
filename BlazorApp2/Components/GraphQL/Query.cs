@@ -1,5 +1,6 @@
 ﻿using BlazorApp2.Components.Models;
 using BlazorApp2.Components.Services;
+using BlazorApp2.Components.Interfaces;
 
 namespace BlazorApp2.Components.GraphQL
 {

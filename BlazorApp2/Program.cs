@@ -1,6 +1,7 @@
 using BlazorApp2.Components;
 using BlazorApp2.Components.GraphQL;
 using BlazorApp2.Components.Services;
+using BlazorApp2.Components.Interfaces;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,14 +1,9 @@
 ﻿using BlazorApp2.Components.Models;
+using BlazorApp2.Components.Interfaces;
 
 namespace BlazorApp2.Components.Services
 {
-    public interface IFileSystemService
-    {
-        Task<List<string>> GetDrivesAsync();
-        Task<FileSearchResult> CrawlDirectoryAsync(string path, string? searchPattern = null, int maxDepth = 3);
-        Task<List<FileSystemItem>> GetDirectoryContentsAsync(string path);
-        Task<List<FileSystemItem>> GetSubdirectoriesAsync(string path);
-    }
+    
 
     public class FileSystemService : IFileSystemService
     {
