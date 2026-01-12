@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using BlazorApp2.SharedCode.Models.Partials;
+using BlazorApp2.SharedCode.Models.Enums;
 
 namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
 {
@@ -32,17 +33,7 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
             OpenDialog();
         }
 
-        private string[] extensions =
-        {
-        "PNG",
-        "JPEG",
-        "TIFF",
-        "PDF",
-        "DOCX",
-        "XLSX",
-        "PPTX",
-        "RTF"
-    };
+        List<string> extensions = Enum.GetNames(typeof(BrowserFileTypes)).ToList();
 
         private string GetMultiSelectionText(List<string> selectedValues)
         {
