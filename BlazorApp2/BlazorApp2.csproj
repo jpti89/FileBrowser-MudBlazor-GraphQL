@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <GraphQL Remove="components\queries\FileSystem.graphql" />
+    <GraphQL Remove="Blazor\queries\FileSystem.graphql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Components\Queries\" />
+    <Folder Include="SharedCode\Models\Views\" />
   </ItemGroup>
 
 </Project>

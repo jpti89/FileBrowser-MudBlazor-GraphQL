@@ -1,6 +1,6 @@
-﻿using BlazorApp2.Components.Models;
+﻿using BlazorApp2.SharedCode.Models.Partials;
 
-namespace BlazorApp2.Components.Interfaces
+namespace BlazorApp2.Blazor.Services.BuisnessLogic.Interfaces
 {
     public interface IFileSystemService
     {

@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using BlazorApp2.Components.Models;
+using BlazorApp2.SharedCode.Models.Partials;
 
-namespace BlazorApp2.Components.Pages
+namespace BlazorApp2.Blazor.Areas.Demo.Views
 {
     public partial class FileBrowser
     {

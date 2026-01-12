@@ -1,4 +1,4 @@
-﻿namespace BlazorApp2.Components.Models;
+﻿namespace BlazorApp2.SharedCode.Models.Partials;
 
 public class TreeItemData
 {

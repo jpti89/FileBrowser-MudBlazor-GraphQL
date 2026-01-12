@@ -1,7 +1,7 @@
-﻿using BlazorApp2.Components.Models;
-using BlazorApp2.Components.Interfaces;
+﻿using BlazorApp2.Blazor.Services.BuisnessLogic.Interfaces;
+using BlazorApp2.SharedCode.Models.Partials;
 
-namespace BlazorApp2.Components.Services
+namespace BlazorApp2.Blazor.Services.BuisnessLogic.Implementations
 {
     
 
