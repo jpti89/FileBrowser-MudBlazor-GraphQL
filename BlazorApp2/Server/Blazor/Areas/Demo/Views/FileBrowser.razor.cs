@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Components;
-using MudBlazor;
+﻿using BlazorApp2.SharedCode.Models.Enums;
 using BlazorApp2.SharedCode.Models.Partials;
-using BlazorApp2.SharedCode.Models.Enums;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using MudBlazor;
 
 namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
 {
@@ -11,6 +12,7 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
         private string? selectedDrive;
         private bool isLoadingDrives = true;
         private string? errorMessage;
+        private string? rightClickedPath;
 
         private List<TreeItemData> treeItems = new();
         private string? selectedTreeItem;
@@ -146,24 +148,6 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
             selectedTreeItem = value;
         }
 
-        private void AddToIncluded()
-        {
-            if (!string.IsNullOrEmpty(selectedTreeItem) && !includedPaths.Contains(selectedTreeItem))
-            {
-                includedPaths.Add(selectedTreeItem);
-                excludedPaths.Remove(selectedTreeItem);
-            }
-        }
-
-        private void AddToExcluded()
-        {
-            if (!string.IsNullOrEmpty(selectedTreeItem) && !excludedPaths.Contains(selectedTreeItem))
-            {
-                excludedPaths.Add(selectedTreeItem);
-                includedPaths.Remove(selectedTreeItem);
-            }
-        }
-
         private void RemoveFromIncluded(string path)
         {
             includedPaths.Remove(path);
@@ -176,59 +160,109 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
 
         private RenderFragment RenderTreeNode(TreeItemData item) => builder =>
         {
-            builder.OpenComponent<MudTreeViewItem<string>>(0);
-            builder.AddAttribute(1, "Value", item.FullPath);
-            builder.AddAttribute(2, "Text", item.Name);
-            builder.AddAttribute(3, "Icon", Icons.Custom.Uncategorized.Folder);
-            builder.AddAttribute(4, "IconExpanded", Icons.Custom.Uncategorized.FolderOpen);
-            builder.AddAttribute(5, "CanExpand", item.HasChildren);
-            builder.AddAttribute(6, "Expanded", item.IsExpanded);
-            builder.AddAttribute(7, "ExpandedChanged", EventCallback.Factory.Create<bool>(this, async expanded =>
+            builder.OpenComponent<MudMenu>(0);
+            builder.AddAttribute(1, "ActivationEvent", MouseEvent.RightClick);
+            builder.AddAttribute(2, "PositionAtCursor", true);
+            builder.AddAttribute(3, "Style", "display: block; width: 100%;");
+
+            builder.AddAttribute(4, "ActivatorContent", (RenderFragment)(activatorBuilder =>
             {
-                item.IsExpanded = expanded;
-
-                if (expanded && !item.ChildrenLoaded)
+                activatorBuilder.OpenComponent<MudTreeViewItem<string>>(0);
+                activatorBuilder.AddAttribute(1, "Value", item.FullPath);
+                activatorBuilder.AddAttribute(2, "Text", item.Name);
+                activatorBuilder.AddAttribute(3, "Icon", Icons.Custom.Uncategorized.Folder);
+                activatorBuilder.AddAttribute(4, "IconExpanded", Icons.Custom.Uncategorized.FolderOpen);
+                activatorBuilder.AddAttribute(5, "CanExpand", item.HasChildren);
+                activatorBuilder.AddAttribute(6, "Expanded", item.IsExpanded);
+                activatorBuilder.AddAttribute(7, "ExpandedChanged", EventCallback.Factory.Create<bool>(this, async expanded =>
                 {
-                    await LoadChildren(item);
-                }
-
-                StateHasChanged();
-            }));
-
-            if (item.HasChildren)
-            {
-                builder.AddAttribute(8, "ChildContent", (RenderFragment)(childBuilder =>
-                {
-                    if (item.IsLoading)
+                    item.IsExpanded = expanded;
+                    if (expanded && !item.ChildrenLoaded)
                     {
-                        childBuilder.OpenComponent<MudTreeViewItem<string>>(0);
-                        childBuilder.AddAttribute(1, "Text", "Loading...");
-                        childBuilder.AddAttribute(2, "Icon", Icons.Material.Filled.HourglassEmpty);
-                        childBuilder.AddAttribute(3, "CanExpand", false);
-                        childBuilder.CloseComponent();
+                        await LoadChildren(item);
                     }
-                    else if (item.ChildrenLoaded)
+                    StateHasChanged();
+                }));
+
+                activatorBuilder.AddAttribute(8, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, (args) =>
+                {
+                    rightClickedPath = item.FullPath;
+                }));
+
+                if (item.HasChildren)
+                {
+                    activatorBuilder.AddAttribute(9, "ChildContent", (RenderFragment)(childBuilder =>
                     {
-                        if (item.Children.Any())
-                        {
-                            foreach (var child in item.Children)
-                            {
-                                childBuilder.AddContent(0, RenderTreeNode(child));
-                            }
-                        }
-                        else
+                        if (item.IsLoading)
                         {
                             childBuilder.OpenComponent<MudTreeViewItem<string>>(0);
-                            childBuilder.AddAttribute(1, "Text", "Empty folder");
-                            childBuilder.AddAttribute(2, "Icon", Icons.Material.Filled.FolderOff);
+                            childBuilder.AddAttribute(1, "Text", "Loading...");
+                            childBuilder.AddAttribute(2, "Icon", Icons.Material.Filled.HourglassEmpty);
                             childBuilder.AddAttribute(3, "CanExpand", false);
                             childBuilder.CloseComponent();
                         }
-                    }
+                        else if (item.ChildrenLoaded)
+                        {
+                            if (item.Children.Any())
+                            {
+                                foreach (var child in item.Children)
+                                {
+                                    childBuilder.AddContent(0, RenderTreeNode(child));
+                                }
+                            }
+                            else
+                            {
+                                childBuilder.OpenComponent<MudTreeViewItem<string>>(0);
+                                childBuilder.AddAttribute(1, "Text", "Empty folder");
+                                childBuilder.AddAttribute(2, "Icon", Icons.Material.Filled.FolderOff);
+                                childBuilder.AddAttribute(3, "CanExpand", false);
+                                childBuilder.CloseComponent();
+                            }
+                        }
+                    }));
+                }
+
+                activatorBuilder.CloseComponent();
+            }));
+
+            builder.AddAttribute(5, "ChildContent", (RenderFragment)(menuBuilder =>
+            {
+                menuBuilder.OpenComponent<MudMenuItem>(0);
+                menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs args) => AddToIncludedFromContext(item.FullPath)));
+                menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>
+                {
+                    textBuilder.AddContent(0, "Add Folder");
                 }));
-            }
+                menuBuilder.CloseComponent();
+
+                menuBuilder.OpenComponent<MudMenuItem>(1);
+                menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs args) => AddToExcludedFromContext(item.FullPath)));
+                menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>
+                {
+                    textBuilder.AddContent(0, "Exclude Folder");
+                }));
+                menuBuilder.CloseComponent();
+            }));
 
             builder.CloseComponent();
         };
+
+        private void AddToIncludedFromContext(string path)
+        {
+            if (!string.IsNullOrEmpty(path) && !includedPaths.Contains(path))
+            {
+                includedPaths.Add(path);
+                excludedPaths.Remove(path);
+            }
+        }
+
+        private void AddToExcludedFromContext(string path)
+        {
+            if (!string.IsNullOrEmpty(path) && !excludedPaths.Contains(path))
+            {
+                excludedPaths.Add(path);
+                includedPaths.Remove(path);
+            }
+        }
     }
 }
