@@ -1,6 +1,5 @@
 using BlazorApp2.Server.Blazor;
 using MudBlazor.Services;
-using BlazorApp2.Server.GraphQlApi.GraphQuery;
 using BlazorApp2.Server.Services.BuisnessLogic.Implementations;
 using BlazorApp2.Server.Services.BuisnessLogic.Interfaces;
 
@@ -12,11 +11,6 @@ builder.Services.AddRazorComponents()
 builder.Services.AddSingleton<IFileSystemService, FileSystemService>();
 
 builder.Services.AddMudServices();
-
-// Add GraphQL
-builder.Services
-    .AddGraphQLServer()
-    .AddQueryType<Query>();
 
 builder.Services.AddCors(options =>
 {
@@ -41,8 +35,6 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.UseCors("AllowBlazor");
-
-app.MapGraphQL();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
