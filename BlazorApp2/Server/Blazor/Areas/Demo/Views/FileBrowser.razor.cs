@@ -93,11 +93,15 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                     Name = selectedDrive,
                     FullPath = selectedDrive,
                     HasChildren = subdirs.Any(),
+                    ChildrenLoaded = true,
+                    IsExpanded = false,
                     Children = subdirs.Select(d => new TreeItemData
                     {
                         Name = d.Name,
                         FullPath = d.FullPath,
-                        HasChildren = true
+                        HasChildren = true,
+                        ChildrenLoaded = false,
+                        Children = new List<TreeItemData>()
                     }).ToList()
                 };
 
@@ -112,7 +116,7 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
 
         private async Task LoadChildren(TreeItemData item)
         {
-            if (item.IsLoading || item.Children.Any())
+            if (item.IsLoading || item.ChildrenLoaded)
                 return;
 
             try
@@ -121,14 +125,18 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                 StateHasChanged();
 
                 var subdirs = await FileSystemService.GetSubdirectoriesAsync(item.FullPath);
+
                 item.Children = subdirs.Select(d => new TreeItemData
                 {
                     Name = d.Name,
                     FullPath = d.FullPath,
-                    HasChildren = true
+                    HasChildren = true,
+                    ChildrenLoaded = false,
+                    Children = new List<TreeItemData>()
                 }).ToList();
 
                 item.HasChildren = item.Children.Any();
+                item.ChildrenLoaded = true;
                 item.IsLoading = false;
                 StateHasChanged();
             }
@@ -137,6 +145,8 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                 errorMessage = $"Error loading subdirectories: {ex.Message}";
                 item.IsLoading = false;
                 item.HasChildren = false;
+                item.ChildrenLoaded = true;
+                StateHasChanged();
             }
         }
 
@@ -185,10 +195,13 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
             builder.AddAttribute(7, "ExpandedChanged", EventCallback.Factory.Create<bool>(this, async expanded =>
             {
                 item.IsExpanded = expanded;
-                if (expanded && !item.Children.Any())
+
+                if (expanded && !item.ChildrenLoaded)
                 {
                     await LoadChildren(item);
                 }
+
+                StateHasChanged();
             }));
 
             if (item.HasChildren)
@@ -200,13 +213,25 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                         childBuilder.OpenComponent<MudTreeViewItem<string>>(0);
                         childBuilder.AddAttribute(1, "Text", "Loading...");
                         childBuilder.AddAttribute(2, "Icon", Icons.Material.Filled.HourglassEmpty);
+                        childBuilder.AddAttribute(3, "CanExpand", false);
                         childBuilder.CloseComponent();
                     }
-                    else
+                    else if (item.ChildrenLoaded)
                     {
-                        foreach (var child in item.Children)
+                        if (item.Children.Any())
                         {
-                            childBuilder.AddContent(0, RenderTreeNode(child));
+                            foreach (var child in item.Children)
+                            {
+                                childBuilder.AddContent(0, RenderTreeNode(child));
+                            }
+                        }
+                        else
+                        {
+                            childBuilder.OpenComponent<MudTreeViewItem<string>>(0);
+                            childBuilder.AddAttribute(1, "Text", "Empty folder");
+                            childBuilder.AddAttribute(2, "Icon", Icons.Material.Filled.FolderOff);
+                            childBuilder.AddAttribute(3, "CanExpand", false);
+                            childBuilder.CloseComponent();
                         }
                     }
                 }));

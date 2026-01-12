@@ -8,4 +8,5 @@ public class TreeItemData
     public bool HasChildren { get; set; } = true;
     public List<TreeItemData> Children { get; set; } = new();
     public bool IsLoading { get; set; } = false;
+    public bool ChildrenLoaded { get; set; } = false;
 }
