@@ -130,7 +130,7 @@
                 <MudText Typo="Typo.subtitle1" Color="Color.Success" Class="mb-2">
                     <strong>File Extensions</strong>
                 </MudText>
-                <MudSelect MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionText))" 
+                <MudSelect MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionExtensionsChoice))"
                              MultiSelection="true" 
                              @bind-Value="value"
                              @bind-SelectedValues="options" 

@@ -18,7 +18,7 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
         private HashSet<string> includedPaths = new();
         private HashSet<string> excludedPaths = new();
 
-        private bool multiselectionTextChoice;
+        private bool multiSelectionExtensionsChoice;
         private string value { get; set; } = "Nothing selected";
         private IEnumerable<string> options { get; set; } = new HashSet<string>() { };
 
@@ -35,9 +35,9 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
 
         List<string> extensions = Enum.GetNames(typeof(BrowserFileTypes)).ToList();
 
-        private string GetMultiSelectionText(List<string> selectedValues)
+        private string GetMultiSelectionExtensionsChoice(List<string> selectedValues)
         {
-            if (multiselectionTextChoice)
+            if (multiSelectionExtensionsChoice)
             {
                 return $"Selected Extension{(selectedValues.Count > 1 ? "s" : "")}: {string.Join(", ", selectedValues.Select(x => x))}";
             }
