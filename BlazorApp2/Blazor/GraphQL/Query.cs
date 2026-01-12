@@ -1,5 +1,4 @@
-﻿using BlazorApp2.Blazor.Services;
-using BlazorApp2.Blazor.Services.BuisnessLogic.Interfaces;
+﻿using BlazorApp2.Blazor.Services.BuisnessLogic.Interfaces;
 using BlazorApp2.SharedCode.Models.Partials;
 
 namespace BlazorApp2.Blazor.GraphQL
