@@ -2,7 +2,7 @@
 using MudBlazor;
 using BlazorApp2.SharedCode.Models.Partials;
 
-namespace BlazorApp2.Blazor.Areas.Demo.Views
+namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
 {
     public partial class FileBrowser
     {

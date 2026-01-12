@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <GraphQL Remove="Blazor\queries\FileSystem.graphql" />
+    <GraphQL Remove="Server\Blazor\queries\FileSystem.graphql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,10 +23,6 @@
     <PackageReference Include="MudBlazor" Version="8.15.0" />
     <PackageReference Include="StrawberryShake.CodeGeneration.CSharp.Analyzers" Version="12.22.6" />
     <PackageReference Include="StrawberryShake.Transport.Http" Version="15.1.11" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="SharedCode\Models\Views\" />
   </ItemGroup>
 
 </Project>

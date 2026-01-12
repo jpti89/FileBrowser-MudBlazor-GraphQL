@@ -1,7 +1,7 @@
 ﻿using GraphQL.Types;
 using BlazorApp2.SharedCode.Models.Partials;
 
-namespace BlazorApp2.GraphQlApi.GraphType
+namespace BlazorApp2.Server.GraphQlApi.GraphType
 {
     public class FileSearchResultGraphType : ObjectGraphType<FileSearchResult>
     {
