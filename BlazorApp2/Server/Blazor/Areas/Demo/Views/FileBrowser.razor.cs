@@ -250,14 +250,6 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                                     childBuilder.AddContent(0, RenderTreeNode(child));
                                 }
                             }
-                            else
-                            {
-                                childBuilder.OpenComponent<MudTreeViewItem<string>>(0);
-                                childBuilder.AddAttribute(1, "Text", "Empty folder");
-                                childBuilder.AddAttribute(2, "Icon", Icons.Material.Filled.FolderOff);
-                                childBuilder.AddAttribute(3, "CanExpand", false);
-                                childBuilder.CloseComponent();
-                            }
                         }
                     }));
                 }
@@ -282,6 +274,14 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                     textBuilder.AddContent(0, "Exclude Folder");
                 }));
                 menuBuilder.CloseComponent();
+
+                menuBuilder.OpenComponent<MudMenuItem>(2);
+                menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs args) => FocusFromContext(item.FullPath)));
+                menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>
+                {
+                    textBuilder.AddContent(0, "Focus Folder");
+                }));
+                menuBuilder.CloseComponent();
             }));
 
             builder.CloseComponent();
@@ -302,6 +302,15 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
             {
                 excludedPaths.Add(path);
                 includedPaths.Remove(path);
+            }
+        }
+        private async Task FocusFromContext(string path)
+        {
+            if (!string.IsNullOrEmpty(path) && !includedPaths.Contains(path))
+            {
+                currentPath = path;
+                selectedDrive = path;
+                await LoadDriveTree();
             }
         }
     }
