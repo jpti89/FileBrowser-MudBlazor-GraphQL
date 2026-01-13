@@ -18,8 +18,9 @@
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.FolderOpen"
-                           OnClick="@OnButtonClick"
-                           Class="mb-4">
+                           OnClick="@OnExplorerSelectorButtonClick"
+                           Class="mb-4"
+                           FullWidth="true">
                     Open Explorer Selector
                 </MudButton>
 
@@ -28,7 +29,7 @@
                     <MudAlert Severity="Severity.Error" Class="mt-2">@errorMessage</MudAlert>
                 }
 
-                <MudDialog @bind-Visible="_visible" Options="_dialogOptions">
+                <MudDialog @bind-Visible="_visibleDialog" Options="_dialogOptions">
                     <TitleContent>
                         <MudText Typo="Typo.h6">File Explorer</MudText>
                     </TitleContent>
@@ -70,7 +71,7 @@
                             </MudItem>
 
                             <MudItem xs="12" md="3">
-                                <MudPaper Class="pa-2" Elevation="0" Style="height: 400px; overflow-y: auto;">
+                                <MudPaper Class="pa-2" Elevation="0" Style="height: 400px; overflow-y: auto;" Outlined="true">
                                     @if (isLoadingDrives)
                                     {
                                         <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
@@ -93,7 +94,7 @@
                             </MudItem>
 
                             <MudItem xs="12" md="9">
-                                <MudPaper Class="pa-2" Elevation="0" Style="height: 400px; overflow-y: auto;">
+                                <MudPaper Class="pa-2" Elevation="0" Style="height: 400px; overflow-y: auto;" Outlined="true">
                                     @if (treeItems.Any())
                                     {
                                         <MudTreeView T="string"
@@ -116,7 +117,6 @@
                         </MudGrid>
                     </DialogContent>
                     <DialogActions>
-                        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Submit">Cancel</MudButton>
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Done</MudButton>
                     </DialogActions>
                 </MudDialog>
@@ -170,9 +170,11 @@
                     <strong>File Type</strong>
                 </MudText>
                 <MudSelect MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionExtensionsChoice))"
-                           MultiSelection="true"
-                           @bind-Value="value"
-                           @bind-SelectedValues="options"
+                           MultiSelection="true" 
+                           SelectAll="true" 
+                           SelectAllText="Select all Types"
+                           HelperText="Add file types"
+                           @bind-SelectedValues="ExtensionOptions"
                            T="string"
                            AdornmentIcon="@Icons.Material.Filled.Search">
                     @foreach (var extension in extensions)

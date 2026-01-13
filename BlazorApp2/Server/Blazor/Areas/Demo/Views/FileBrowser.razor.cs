@@ -12,27 +12,27 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
         private List<TreeItemData> treeItems = new();
 
         private string? selectedDrive;
-        private string currentPath = "C:\\";
+        private string? currentPath;
         private string? errorMessage;
         private string? selectedTreeItem;
         private string? rightClickedPath;
 
         private bool isLoadingDrives = true;
-        private bool multiSelectionExtensionsChoice;
-        private bool _visible;
-        private string value { get; set; } = "Nothing selected";
+        private bool _visibleDialog;
+
+        private void OpenDialog() => _visibleDialog = true;
+        private void Submit() => _visibleDialog = false;
+
+        private readonly DialogOptions _dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Large };
 
         private HashSet<string> includedPaths = new();
         private HashSet<string> excludedPaths = new();
 
-        private IEnumerable<string> options { get; set; } = new HashSet<string>() { };
+        private IEnumerable<string> ExtensionOptions { get; set; } = new HashSet<string>() { };
 
-        private readonly DialogOptions _dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Large };
+        List<string> extensions = Enum.GetNames(typeof(BrowserFileTypes)).ToList();
 
-        private void OpenDialog() => _visible = true;
-        private void Submit() => _visible = false;
-
-        private async Task OnButtonClick()
+        private async Task OnExplorerSelectorButtonClick()
         {
             await LoadDrives();
 
@@ -45,20 +45,10 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
             OpenDialog();
         }
 
-        List<string> extensions = Enum.GetNames(typeof(BrowserFileTypes)).ToList();
-
         private string GetMultiSelectionExtensionsChoice(List<string> selectedValues)
         {
-            if (multiSelectionExtensionsChoice)
-            {
-                return $"Selected Extension{(selectedValues.Count > 1 ? "s" : "")}: {string.Join(", ", selectedValues.Select(x => x))}";
-            }
-            else
-            {
-                return $"{selectedValues.Count} Extension{(selectedValues.Count > 1 ? "s have" : " has")} been selected";
-            }
+            return string.Join(", ", selectedValues);
         }
-
 
         private async Task LoadDrives()
         {
