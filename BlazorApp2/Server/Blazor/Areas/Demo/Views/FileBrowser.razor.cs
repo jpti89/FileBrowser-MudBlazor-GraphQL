@@ -9,29 +9,39 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
     public partial class FileBrowser
     {
         private List<string>? drives;
+        private List<TreeItemData> treeItems = new();
+
         private string? selectedDrive;
-        private bool isLoadingDrives = true;
+        private string currentPath = "C:\\";
         private string? errorMessage;
+        private string? selectedTreeItem;
         private string? rightClickedPath;
 
-        private List<TreeItemData> treeItems = new();
-        private string? selectedTreeItem;
+        private bool isLoadingDrives = true;
+        private bool multiSelectionExtensionsChoice;
+        private bool _visible;
+        private string value { get; set; } = "Nothing selected";
 
         private HashSet<string> includedPaths = new();
         private HashSet<string> excludedPaths = new();
 
-        private bool multiSelectionExtensionsChoice;
-        private string value { get; set; } = "Nothing selected";
         private IEnumerable<string> options { get; set; } = new HashSet<string>() { };
 
-        private bool _visible;
-        private readonly DialogOptions _dialogOptions = new() { FullWidth = true };
+        private readonly DialogOptions _dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Large };
 
         private void OpenDialog() => _visible = true;
         private void Submit() => _visible = false;
-        private void OnButtonClick()
+
+        private async Task OnButtonClick()
         {
-            LoadDriveTree();
+            await LoadDrives();
+
+            if (drives != null && drives.Any())
+            {
+                selectedDrive = drives.FirstOrDefault(d => d.StartsWith("C:")) ?? drives.First();
+                currentPath = selectedDrive;
+                await LoadDriveTree();
+            }
             OpenDialog();
         }
 
@@ -49,10 +59,6 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
             }
         }
 
-        protected override async Task OnInitializedAsync()
-        {
-            await LoadDrives();
-        }
 
         private async Task LoadDrives()
         {
@@ -60,13 +66,57 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
             {
                 isLoadingDrives = true;
                 drives = await FileSystemService.GetDrivesAsync();
-                isLoadingDrives = false;
             }
             catch (Exception ex)
             {
                 errorMessage = $"Error loading drives: {ex.Message}";
+            }
+            finally
+            {
                 isLoadingDrives = false;
             }
+        }
+
+        private async Task OnDriveSelected(string drive)
+        {
+            selectedDrive = drive;
+            currentPath = drive;
+            await LoadDriveTree();
+        }
+
+        private async Task NavigateToPath()
+        {
+            if (string.IsNullOrEmpty(currentPath))
+                return;
+
+            selectedDrive = currentPath;
+            await LoadDriveTree();
+        }
+
+        private async Task NavigateUp()
+        {
+            if (string.IsNullOrEmpty(currentPath))
+                return;
+
+            try
+            {
+                var parentPath = Directory.GetParent(currentPath)?.FullName;
+                if (!string.IsNullOrEmpty(parentPath))
+                {
+                    currentPath = parentPath;
+                    selectedDrive = currentPath;
+                    await LoadDriveTree();
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Cannot navigate up: {ex.Message}";
+            }
+        }
+
+        private async Task RefreshCurrentPath()
+        {
+            await LoadDriveTree();
         }
 
         private async Task LoadDriveTree()
@@ -146,6 +196,7 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
         private void OnSelectedValueChanged(string value)
         {
             selectedTreeItem = value;
+            currentPath = value;
         }
 
         private void RemoveFromIncluded(string path)
@@ -164,7 +215,6 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
             builder.AddAttribute(1, "ActivationEvent", MouseEvent.RightClick);
             builder.AddAttribute(2, "PositionAtCursor", true);
             builder.AddAttribute(3, "Style", "display: block; width: 100%;");
-
             builder.AddAttribute(4, "ActivatorContent", (RenderFragment)(activatorBuilder =>
             {
                 activatorBuilder.OpenComponent<MudTreeViewItem<string>>(0);
@@ -234,7 +284,7 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                     textBuilder.AddContent(0, "Add Folder");
                 }));
                 menuBuilder.CloseComponent();
-
+                
                 menuBuilder.OpenComponent<MudMenuItem>(1);
                 menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs args) => AddToExcludedFromContext(item.FullPath)));
                 menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>

@@ -10,72 +10,120 @@
 <MudDialogProvider />
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-    <MudText Typo="Typo.h4" Class="mb-4">File Browser</MudText>
 
     <MudGrid>
         <MudItem xs="12" md="6">
             <MudPaper Class="pa-4" Elevation="2">
-                <MudText Typo="Typo.h6" Class="mb-2">Select Drive</MudText>
 
-                @if (isLoadingDrives)
-                {
-                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-                }
-                else if (drives != null)
-                {
-                    <MudSelect T="string" Label="Available Drives" @bind-Value="selectedDrive"
-                               Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
-                        @foreach (var drive in drives)
-                        {
-                            <MudSelectItem Value="@drive">@drive</MudSelectItem>
-                        }
-                    </MudSelect>
-
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                               OnClick="@OnButtonClick" Class="mt-2"
-                               Disabled="string.IsNullOrEmpty(selectedDrive)">
-                        Load Directory Tree
-                    </MudButton>
-                }
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.FolderOpen"
+                           OnClick="@OnButtonClick"
+                           Class="mb-4">
+                    Open Explorer Selector
+                </MudButton>
 
                 @if (!string.IsNullOrEmpty(errorMessage))
                 {
                     <MudAlert Severity="Severity.Error" Class="mt-2">@errorMessage</MudAlert>
                 }
 
-                @if (treeItems.Any())
-                {
-                    <MudDialog @bind-Visible="_visible" Options="_dialogOptions">
-                        <TitleContent>
-                            <MudText Typo="Typo.h6" Class="mt-4 mb-2">Directory Tree</MudText>
-                        </TitleContent>
-                        <DialogContent>
-                            <MudPaper Elevation="0" Class="pa-2" Style="max-height: 500px; overflow-y: auto;">
-                                <MudTreeView T="string"
-                                             SelectedValue="selectedTreeItem"
-                                             SelectedValueChanged="OnSelectedValueChanged"
-                                             ExpandOnClick=true
-                                             Hover="true">
-                                    @foreach (var item in treeItems)
+                <MudDialog @bind-Visible="_visible" Options="_dialogOptions">
+                    <TitleContent>
+                        <MudText Typo="Typo.h6">File Explorer</MudText>
+                    </TitleContent>
+                    <DialogContent>
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12">
+                                <MudPaper Class="pa-2 d-flex align-center gap-2" Elevation="0">
+                                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                                                   Size="Size.Small"
+                                                   Color="Color.Default"
+                                                   Disabled="true" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.ArrowForward"
+                                                   Size="Size.Small"
+                                                   Color="Color.Default"
+                                                   Disabled="true" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                                                   Size="Size.Small"
+                                                   Color="Color.Default"
+                                                   OnClick="NavigateUp" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                                   Size="Size.Small"
+                                                   Color="Color.Default"
+                                                   OnClick="RefreshCurrentPath" />
+
+                                    <MudTextField @bind-Value="currentPath"
+                                                  Label="Path"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Adornment="Adornment.End"
+                                                  AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"
+                                                  Class="flex-grow-1" />
+
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               OnClick="NavigateToPath">
+                                        Focus Folder
+                                    </MudButton>
+                                </MudPaper>
+                            </MudItem>
+
+                            <MudItem xs="12" md="3">
+                                <MudPaper Class="pa-2" Elevation="0" Style="height: 400px; overflow-y: auto;">
+                                    @if (isLoadingDrives)
                                     {
-                                        @RenderTreeNode(item)
+                                        <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
                                     }
-                                </MudTreeView>
-                            </MudPaper>
-                        </DialogContent>
-                        <DialogActions>
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Class="px-10">Close</MudButton>
-                        </DialogActions>
-                    </MudDialog>
-                }
-            </MudPaper>
-        </MudItem>
+                                    else if (drives != null)
+                                    {
+                                        <MudList Clickable="true" Dense="true" T="string" SelectedValue="selectedDrive" SelectedValueChanged="OnDriveSelected">
+                                            @foreach (var drive in drives)
+                                            {
+                                                <MudListItem T="string" Value="@drive">
+                                                    <div class="d-flex align-center">
+                                                        <MudIcon Icon="@Icons.Material.Filled.Storage" Size="Size.Small" Class="mr-2" />
+                                                        <MudText>@drive</MudText>
+                                                    </div>
+                                                </MudListItem>
+                                            }
+                                        </MudList>
+                                    }
+                                </MudPaper>
+                            </MudItem>
 
-        <MudItem xs="12" md="6">
-            <MudPaper Class="pa-4" Elevation="2">
+                            <MudItem xs="12" md="9">
+                                <MudPaper Class="pa-2" Elevation="0" Style="height: 400px; overflow-y: auto;">
+                                    @if (treeItems.Any())
+                                    {
+                                        <MudTreeView T="string"
+                                                     SelectedValue="selectedTreeItem"
+                                                     SelectedValueChanged="OnSelectedValueChanged"
+                                                     ExpandOnClick=true
+                                                     Hover="true">
+                                            @foreach (var item in treeItems)
+                                            {
+                                                @RenderTreeNode(item)
+                                            }
+                                        </MudTreeView>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Select a drive to browse</MudText>
+                                    }
+                                </MudPaper>
+                            </MudItem>
+                        </MudGrid>
+                    </DialogContent>
+                    <DialogActions>
+                        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Submit">Cancel</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Done</MudButton>
+                    </DialogActions>
+                </MudDialog>
+
+                <MudDivider Class="my-2" />
+
                 <MudText Typo="Typo.h6" Class="mb-2">Selected Folders</MudText>
-
-                
 
                 <MudDivider Class="my-2" />
 
@@ -119,14 +167,14 @@
 
                 <MudDivider Class="my-6" />
                 <MudText Typo="Typo.subtitle1" Color="Color.Success" Class="mb-2">
-                    <strong>File Extensions</strong>
+                    <strong>File Type</strong>
                 </MudText>
                 <MudSelect MultiSelectionTextFunc="@(new Func<List<string>, string>(GetMultiSelectionExtensionsChoice))"
-                             MultiSelection="true" 
-                             @bind-Value="value"
-                             @bind-SelectedValues="options" 
-                             T="string" 
-                             AdornmentIcon="@Icons.Material.Filled.Search">
+                           MultiSelection="true"
+                           @bind-Value="value"
+                           @bind-SelectedValues="options"
+                           T="string"
+                           AdornmentIcon="@Icons.Material.Filled.Search">
                     @foreach (var extension in extensions)
                     {
                         <MudSelectItem T="string" Value="@extension">@extension</MudSelectItem>
