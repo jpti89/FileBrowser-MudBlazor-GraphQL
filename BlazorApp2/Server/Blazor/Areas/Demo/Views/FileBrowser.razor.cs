@@ -117,26 +117,61 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
             try
             {
                 errorMessage = null;
+
                 treeItems.Clear();
+                await Task.Delay(1);
+                StateHasChanged();
 
                 var subdirs = await FileSystemService.GetSubdirectoriesAsync(selectedDrive);
 
+                var displayName = selectedDrive.TrimEnd('\\').Split('\\').LastOrDefault() ?? selectedDrive;
+                if (string.IsNullOrEmpty(displayName))
+                {
+                    displayName = selectedDrive;
+                }
+                List<TreeItemData> children = new List<TreeItemData>();
+
+                if (subdirs.Any())
+                {
+                    var childrenTasks = subdirs.Select(async d =>
+                    {
+                        try
+                        {
+                            var childSubdirs = await FileSystemService.GetSubdirectoriesAsync(d.FullPath);
+                            return new TreeItemData
+                            {
+                                Name = d.Name,
+                                FullPath = d.FullPath,
+                                HasChildren = childSubdirs.Any(),
+                                ChildrenLoaded = false,
+                                Children = new List<TreeItemData>()
+                            };
+                        }
+                        catch
+                        {
+                            return new TreeItemData
+                            {
+                                Name = d.Name,
+                                FullPath = d.FullPath,
+                                HasChildren = false,
+                                ChildrenLoaded = false,
+                                Children = new List<TreeItemData>()
+                            };
+                        }
+                    });
+                    children = (await Task.WhenAll(childrenTasks)).ToList();
+                }
+
                 var rootItem = new TreeItemData
                 {
-                    Name = selectedDrive,
+                    Name = displayName,
                     FullPath = selectedDrive,
                     HasChildren = subdirs.Any(),
                     ChildrenLoaded = true,
                     IsExpanded = false,
-                    Children = subdirs.Select(d => new TreeItemData
-                    {
-                        Name = d.Name,
-                        FullPath = d.FullPath,
-                        HasChildren = true,
-                        ChildrenLoaded = false,
-                        Children = new List<TreeItemData>()
-                    }).ToList()
+                    Children = children
                 };
+
 
                 treeItems.Add(rootItem);
                 StateHasChanged();
@@ -159,15 +194,36 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
 
                 var subdirs = await FileSystemService.GetSubdirectoriesAsync(item.FullPath);
 
-                item.Children = subdirs.Select(d => new TreeItemData
+                var childrenTasks = subdirs.Select(async d =>
                 {
-                    Name = d.Name,
-                    FullPath = d.FullPath,
-                    HasChildren = true,
-                    ChildrenLoaded = false,
-                    Children = new List<TreeItemData>()
-                }).ToList();
+                    try
+                    {
+                        var childSubdirs = await FileSystemService.GetSubdirectoriesAsync(d.FullPath);
+                        return new TreeItemData
+                        {
+                            Name = d.Name,
+                            FullPath = d.FullPath,
+                            HasChildren = childSubdirs.Any(),
+                            ChildrenLoaded = false,
+                            Children = new List<TreeItemData>()
+                        };
+                    }
+                    catch
+                    {
+                        return new TreeItemData
+                        {
+                            Name = d.Name,
+                            FullPath = d.FullPath,
+                            HasChildren = false,
+                            ChildrenLoaded = false,
+                            Children = new List<TreeItemData>()
+                        };
+                    }
+                });
 
+                var children = await Task.WhenAll(childrenTasks);
+
+                item.Children = children.ToList();
                 item.HasChildren = item.Children.Any();
                 item.ChildrenLoaded = true;
                 item.IsLoading = false;
