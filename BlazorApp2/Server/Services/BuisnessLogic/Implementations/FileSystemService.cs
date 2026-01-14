@@ -51,5 +51,62 @@ namespace BlazorApp2.Server.Services.BuisnessLogic.Implementations
 
             return Task.FromResult(items);
         }
+
+        public Task<List<FileSystemItem>> GetDirectoryContentsAsync(string path)
+        {
+            var items = new List<FileSystemItem>();
+
+            if (!Directory.Exists(path))
+            {
+                return Task.FromResult(items);
+            }
+
+            try
+            {
+                var directories = Directory.GetDirectories(path);
+                foreach (var dir in directories)
+                {
+                    try
+                    {
+                        var dirInfo = new DirectoryInfo(dir);
+                        items.Add(new FileSystemItem
+                        {
+                            Name = dirInfo.Name,
+                            FullPath = dirInfo.FullName,
+                            IsDirectory = true,
+                            Size = 0,
+                            LastModified = dirInfo.LastWriteTime,
+                            Extension = string.Empty
+                        });
+                    }
+                    catch (UnauthorizedAccessException) { }
+                    catch (Exception) { }
+                }
+
+                var files = Directory.GetFiles(path);
+                foreach (var file in files)
+                {
+                    try
+                    {
+                        var fileInfo = new FileInfo(file);
+                        items.Add(new FileSystemItem
+                        {
+                            Name = fileInfo.Name,
+                            FullPath = fileInfo.FullName,
+                            IsDirectory = false,
+                            Size = fileInfo.Length,
+                            LastModified = fileInfo.LastWriteTime,
+                            Extension = fileInfo.Extension
+                        });
+                    }
+                    catch (UnauthorizedAccessException) { }
+                    catch (Exception) { }
+                }
+            }
+            catch (UnauthorizedAccessException) { }
+            catch (Exception) { }
+
+            return Task.FromResult(items);
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using BlazorApp2.SharedCode.Models.Enums;
 using BlazorApp2.SharedCode.Models.Partials;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 
@@ -24,11 +25,6 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
         private void Submit() => _visibleDialog = false;
 
         private readonly DialogOptions _dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Large };
-
-        private HashSet<string> includedPaths = new();
-        private HashSet<string> excludedPaths = new();
-
-        private IEnumerable<string> ExtensionOptions { get; set; } = new HashSet<string>() { };
 
         List<string> extensions = Enum.GetNames(typeof(BrowserFileTypes)).ToList();
 
@@ -122,13 +118,16 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                 await Task.Delay(1);
                 StateHasChanged();
 
-                var subdirs = await FileSystemService.GetSubdirectoriesAsync(selectedDrive);
+                var contents = await FileSystemService.GetDirectoryContentsAsync(selectedDrive);
+                var subdirs = contents.Where(c => c.IsDirectory).ToList();
+                var files = contents.Where(c => !c.IsDirectory).ToList();
 
                 var displayName = selectedDrive.TrimEnd('\\').Split('\\').LastOrDefault() ?? selectedDrive;
                 if (string.IsNullOrEmpty(displayName))
                 {
                     displayName = selectedDrive;
                 }
+
                 List<TreeItemData> children = new List<TreeItemData>();
 
                 if (subdirs.Any())
@@ -142,6 +141,7 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                             {
                                 Name = d.Name,
                                 FullPath = d.FullPath,
+                                IsDirectory = true,
                                 HasChildren = childSubdirs.Any(),
                                 ChildrenLoaded = false,
                                 Children = new List<TreeItemData>()
@@ -153,25 +153,41 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                             {
                                 Name = d.Name,
                                 FullPath = d.FullPath,
+                                IsDirectory = true,
                                 HasChildren = false,
                                 ChildrenLoaded = false,
                                 Children = new List<TreeItemData>()
                             };
                         }
                     });
-                    children = (await Task.WhenAll(childrenTasks)).ToList();
+
+                    var folderChildren = await Task.WhenAll(childrenTasks);
+
+                    var fileChildren = files.Select(f => new TreeItemData
+                    {
+                        Name = f.Name,
+                        FullPath = f.FullPath,
+                        IsDirectory = false,
+                        HasChildren = false,
+                        ChildrenLoaded = true,
+                        Size = f.Size,
+                        Extension = f.Extension,
+                        Children = new List<TreeItemData>()
+                    });
+
+                    children = folderChildren.Concat(fileChildren).ToList();
                 }
 
                 var rootItem = new TreeItemData
                 {
                     Name = displayName,
                     FullPath = selectedDrive,
-                    HasChildren = subdirs.Any(),
+                    IsDirectory = true,
+                    HasChildren = subdirs.Any() || files.Any(),
                     ChildrenLoaded = true,
                     IsExpanded = false,
                     Children = children
                 };
-
 
                 treeItems.Add(rootItem);
                 StateHasChanged();
@@ -184,7 +200,7 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
 
         private async Task LoadChildren(TreeItemData item)
         {
-            if (item.IsLoading || item.ChildrenLoaded)
+            if (item.IsLoading || item.ChildrenLoaded || !item.IsDirectory)
                 return;
 
             try
@@ -192,9 +208,12 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                 item.IsLoading = true;
                 StateHasChanged();
 
-                var subdirs = await FileSystemService.GetSubdirectoriesAsync(item.FullPath);
+                var contents = await FileSystemService.GetDirectoryContentsAsync(item.FullPath);
 
-                var childrenTasks = subdirs.Select(async d =>
+                var directories = contents.Where(c => c.IsDirectory).ToList();
+                var files = contents.Where(c => !c.IsDirectory).ToList();
+
+                var childrenTasks = directories.Select(async d =>
                 {
                     try
                     {
@@ -203,6 +222,7 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                         {
                             Name = d.Name,
                             FullPath = d.FullPath,
+                            IsDirectory = true,
                             HasChildren = childSubdirs.Any(),
                             ChildrenLoaded = false,
                             Children = new List<TreeItemData>()
@@ -214,6 +234,7 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                         {
                             Name = d.Name,
                             FullPath = d.FullPath,
+                            IsDirectory = true,
                             HasChildren = false,
                             ChildrenLoaded = false,
                             Children = new List<TreeItemData>()
@@ -221,9 +242,21 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
                     }
                 });
 
-                var children = await Task.WhenAll(childrenTasks);
+                var folderChildren = await Task.WhenAll(childrenTasks);
 
-                item.Children = children.ToList();
+                var fileChildren = files.Select(f => new TreeItemData
+                {
+                    Name = f.Name,
+                    FullPath = f.FullPath,
+                    IsDirectory = false,
+                    HasChildren = false,
+                    ChildrenLoaded = true,
+                    Size = f.Size,
+                    Extension = f.Extension,
+                    Children = new List<TreeItemData>()
+                });
+
+                item.Children = folderChildren.Concat(fileChildren).ToList();
                 item.HasChildren = item.Children.Any();
                 item.ChildrenLoaded = true;
                 item.IsLoading = false;
@@ -257,91 +290,126 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
 
         private RenderFragment RenderTreeNode(TreeItemData item) => builder =>
         {
-            builder.OpenComponent<MudMenu>(0);
-            builder.AddAttribute(1, "ActivationEvent", MouseEvent.RightClick);
-            builder.AddAttribute(2, "PositionAtCursor", true);
-            builder.AddAttribute(3, "Style", "display: block; width: 100%;");
-            builder.AddAttribute(4, "ActivatorContent", (RenderFragment)(activatorBuilder =>
+            if (item.IsDirectory)
             {
-                activatorBuilder.OpenComponent<MudTreeViewItem<string>>(0);
-                activatorBuilder.AddAttribute(1, "Value", item.FullPath);
-                activatorBuilder.AddAttribute(2, "Text", item.Name);
-                activatorBuilder.AddAttribute(3, "Icon", Icons.Custom.Uncategorized.Folder);
-                activatorBuilder.AddAttribute(4, "IconExpanded", Icons.Custom.Uncategorized.FolderOpen);
-                activatorBuilder.AddAttribute(5, "CanExpand", item.HasChildren);
-                activatorBuilder.AddAttribute(6, "Expanded", item.IsExpanded);
-                activatorBuilder.AddAttribute(7, "ExpandedChanged", EventCallback.Factory.Create<bool>(this, async expanded =>
+                builder.OpenComponent<MudMenu>(0);
+                builder.AddAttribute(1, "ActivationEvent", MouseEvent.RightClick);
+                builder.AddAttribute(2, "PositionAtCursor", true);
+                builder.AddAttribute(3, "Style", "display: block; width: 100%;");
+                builder.AddAttribute(4, "ActivatorContent", (RenderFragment)(activatorBuilder =>
                 {
-                    item.IsExpanded = expanded;
-                    if (expanded && !item.ChildrenLoaded)
+                    RenderTreeViewItem(activatorBuilder, item);
+                }));
+
+                builder.AddAttribute(5, "ChildContent", (RenderFragment)(menuBuilder =>
+                {
+                    menuBuilder.OpenComponent<MudMenuItem>(0);
+                    menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs args) => AddToIncludedFromContext(item.FullPath)));
+                    menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>
                     {
-                        await LoadChildren(item);
+                        textBuilder.AddContent(0, "Add Folder");
+                    }));
+                    menuBuilder.CloseComponent();
+
+                    menuBuilder.OpenComponent<MudMenuItem>(1);
+                    menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs args) => AddToExcludedFromContext(item.FullPath)));
+                    menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>
+                    {
+                        textBuilder.AddContent(0, "Exclude Folder");
+                    }));
+                    menuBuilder.CloseComponent();
+
+                    menuBuilder.OpenComponent<MudMenuItem>(2);
+                    menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs args) => FocusFromContext(item.FullPath)));
+                    menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>
+                    {
+                        textBuilder.AddContent(0, "Focus Folder");
+                    }));
+                    menuBuilder.CloseComponent();
+                }));
+
+                builder.CloseComponent();
+            }
+            else
+            {
+                RenderTreeViewItem(builder, item);
+            }
+        };
+
+        private void RenderTreeViewItem(RenderTreeBuilder builder, TreeItemData item)
+        {
+            builder.OpenComponent<MudTreeViewItem<string>>(0);
+            builder.AddAttribute(1, "Value", item.FullPath);
+            builder.AddAttribute(2, "Text", item.Name);
+
+            if (item.IsDirectory)
+            {
+                builder.AddAttribute(3, "Icon", @"fa-solid fa-folder");
+                builder.AddAttribute(4, "IconExpanded", @"fa-solid fa-folder-open");
+            }
+            else
+            {
+                builder.AddAttribute(3, "Icon", GetFileIcon(item.Extension));
+            }
+
+            builder.AddAttribute(5, "CanExpand", item.HasChildren);
+            builder.AddAttribute(6, "Expanded", item.IsExpanded);
+            builder.AddAttribute(7, "ExpandedChanged", EventCallback.Factory.Create<bool>(this, async expanded =>
+            {
+                item.IsExpanded = expanded;
+                if (expanded && !item.ChildrenLoaded && item.IsDirectory)
+                {
+                    await LoadChildren(item);
+                }
+                StateHasChanged();
+            }));
+
+            if (item.HasChildren)
+            {
+                builder.AddAttribute(8, "ChildContent", (RenderFragment)(childBuilder =>
+                {
+                    if (item.IsLoading)
+                    {
+                        childBuilder.OpenComponent<MudTreeViewItem<string>>(0);
+                        childBuilder.AddAttribute(1, "Text", "Loading...");
+                        childBuilder.AddAttribute(2, "Icon", @"fa-hourglass");
+                        childBuilder.AddAttribute(3, "CanExpand", false);
+                        childBuilder.CloseComponent();
                     }
-                    StateHasChanged();
-                }));
-
-                activatorBuilder.AddAttribute(8, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, (args) =>
-                {
-                    rightClickedPath = item.FullPath;
-                }));
-
-                if (item.HasChildren)
-                {
-                    activatorBuilder.AddAttribute(9, "ChildContent", (RenderFragment)(childBuilder =>
+                    else if (item.ChildrenLoaded)
                     {
-                        if (item.IsLoading)
+                        if (item.Children.Any())
                         {
-                            childBuilder.OpenComponent<MudTreeViewItem<string>>(0);
-                            childBuilder.AddAttribute(1, "Text", "Loading...");
-                            childBuilder.AddAttribute(2, "Icon", Icons.Material.Filled.HourglassEmpty);
-                            childBuilder.AddAttribute(3, "CanExpand", false);
-                            childBuilder.CloseComponent();
-                        }
-                        else if (item.ChildrenLoaded)
-                        {
-                            if (item.Children.Any())
+                            foreach (var child in item.Children)
                             {
-                                foreach (var child in item.Children)
-                                {
-                                    childBuilder.AddContent(0, RenderTreeNode(child));
-                                }
+                                childBuilder.AddContent(0, RenderTreeNode(child));
                             }
                         }
-                    }));
-                }
-
-                activatorBuilder.CloseComponent();
-            }));
-
-            builder.AddAttribute(5, "ChildContent", (RenderFragment)(menuBuilder =>
-            {
-                menuBuilder.OpenComponent<MudMenuItem>(0);
-                menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs args) => AddToIncludedFromContext(item.FullPath)));
-                menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>
-                {
-                    textBuilder.AddContent(0, "Add Folder");
+                    }
                 }));
-                menuBuilder.CloseComponent();
-                
-                menuBuilder.OpenComponent<MudMenuItem>(1);
-                menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs args) => AddToExcludedFromContext(item.FullPath)));
-                menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>
-                {
-                    textBuilder.AddContent(0, "Exclude Folder");
-                }));
-                menuBuilder.CloseComponent();
-
-                menuBuilder.OpenComponent<MudMenuItem>(2);
-                menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs args) => FocusFromContext(item.FullPath)));
-                menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>
-                {
-                    textBuilder.AddContent(0, "Focus Folder");
-                }));
-                menuBuilder.CloseComponent();
-            }));
+            }
 
             builder.CloseComponent();
-        };
+        }
+
+        private string GetFileIcon(string extension)
+        {
+            return extension.ToLower() switch
+            {
+                ".txt" => @"fa-solid fa-file-lines",
+                ".csv" => @"fa-solid fa-file-csv",
+                ".pdf" => @"fa-solid fa-file-pdf",
+                ".doc" or ".docx" => @"fa-solid fa-file-word",
+                ".xls" or ".xlsx" => @"fa-solid fa-file-excel",
+                ".pptx" => @"fa-solid fa-file-powerpoint",
+                ".jpg" or ".jpeg" or ".png" or ".gif" or ".tiff" => @"fa-solid fa-file-image",
+                ".mp3" or ".wav" => @"fa-solid fa-file-audio",
+                ".mp4" or ".avi" => @"fa-solid fa-file-video",
+                ".zip" or ".rar" => @"fa-solid fa-file-zipper",
+                ".exe" => @"fa-solid fa-file",
+                _ => @"fa-solid fa-file",
+            };
+        }
 
         private void AddToIncludedFromContext(string path)
         {

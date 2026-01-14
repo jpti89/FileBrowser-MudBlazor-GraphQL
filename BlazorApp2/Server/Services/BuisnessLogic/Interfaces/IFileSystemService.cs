@@ -6,5 +6,6 @@ namespace BlazorApp2.Server.Services.BuisnessLogic.Interfaces
     {
         Task<List<string>> GetDrivesAsync();
         Task<List<FileSystemItem>> GetSubdirectoriesAsync(string path);
+        Task<List<FileSystemItem>> GetDirectoryContentsAsync(string path);
     }
 }

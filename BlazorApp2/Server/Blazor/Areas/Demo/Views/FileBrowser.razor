@@ -17,10 +17,10 @@
 
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.FolderOpen"
                            OnClick="@OnExplorerSelectorButtonClick"
                            Class="mb-4"
                            FullWidth="true">
+                    <i class="fa-solid fa-folder-open me-2"></i>
                     Open Explorer Selector
                 </MudButton>
 
@@ -37,19 +37,19 @@
                         <MudGrid Spacing="2">
                             <MudItem xs="12">
                                 <MudPaper Class="pa-2 d-flex align-center gap-2" Elevation="0">
-                                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                                    <MudIconButton Icon="@("fa-solid fa-arrow-left")"
                                                    Size="Size.Small"
                                                    Color="Color.Default"
                                                    Disabled="true" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.ArrowForward"
+                                    <MudIconButton Icon="@("fa-solid fa-arrow-right")"
                                                    Size="Size.Small"
                                                    Color="Color.Default"
                                                    Disabled="true" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                                    <MudIconButton Icon="@("fa-solid fa-arrow-up")"
                                                    Size="Size.Small"
                                                    Color="Color.Default"
                                                    OnClick="NavigateUp" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                    <MudIconButton Icon="@("fa-solid fa-arrows-rotate")"
                                                    Size="Size.Small"
                                                    Color="Color.Default"
                                                    OnClick="RefreshCurrentPath" />
@@ -59,7 +59,7 @@
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Adornment="Adornment.End"
-                                                  AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"
+                                                  AdornmentIcon="@("fa-solid fa-pen")"
                                                   Class="flex-grow-1" />
 
                                     <MudButton Variant="Variant.Filled"
@@ -83,7 +83,7 @@
                                             {
                                                 <MudListItem T="string" Value="@drive">
                                                     <div class="d-flex align-center">
-                                                        <MudIcon Icon="@Icons.Material.Filled.Storage" Size="Size.Small" Class="mr-2" />
+                                                        <MudIcon Icon="@("fa-regular fa-hard-drive")" Size="Size.Small" Class="mr-2" />
                                                         <MudText>@drive</MudText>
                                                     </div>
                                                 </MudListItem>
@@ -136,7 +136,7 @@
                         <MudListItem T="string">
                             <div class="d-flex justify-space-between align-center">
                                 <MudText>@path</MudText>
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                <MudIconButton Icon="@("fa-solid fa-trash")"
                                                Size="Size.Small"
                                                Color="Color.Error"
                                                OnClick="@(() => RemoveFromIncluded(path))" />
@@ -156,7 +156,7 @@
                         <MudListItem T="string">
                             <div class="d-flex justify-space-between align-center">
                                 <MudText>@path</MudText>
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                <MudIconButton Icon="@("fa-solid fa-trash")"
                                                Size="Size.Small"
                                                Color="Color.Error"
                                                OnClick="@(() => RemoveFromExcluded(path))" />
@@ -176,7 +176,7 @@
                            HelperText="Add file types"
                            @bind-SelectedValues="ExtensionOptions"
                            T="string"
-                           AdornmentIcon="@Icons.Material.Filled.Search">
+                           AdornmentIcon="@("fa-solid fa-magnifying-glass")">
                     @foreach (var extension in extensions)
                     {
                         <MudSelectItem T="string" Value="@extension">@extension</MudSelectItem>
@@ -189,5 +189,8 @@
 </MudContainer>
 
 @code {
+    [Parameter] public HashSet<string> includedPaths { get; set; } = new();
+    [Parameter] public HashSet<string> excludedPaths { get; set; } = new();
+    [Parameter] public IEnumerable<string> ExtensionOptions { get; set; } = new HashSet<string>() { };
 
 }

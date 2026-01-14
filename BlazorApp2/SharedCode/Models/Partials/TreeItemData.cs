@@ -9,4 +9,7 @@ public class TreeItemData
     public List<TreeItemData> Children { get; set; } = new();
     public bool IsLoading { get; set; } = false;
     public bool ChildrenLoaded { get; set; } = false;
+    public bool IsDirectory { get; set; }
+    public long Size { get; set; } = 0;
+    public string Extension { get; set; } = string.Empty;
 }

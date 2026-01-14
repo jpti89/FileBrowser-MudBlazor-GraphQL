@@ -19,7 +19,6 @@ namespace BlazorApp2.Server.GraphQlApi.GraphQuery
                 })
                 .Description("Get all available drives on the system");
 
-            // Get subdirectories
             This.Field<ListGraphType<FileSystemItemGraphType>, List<FileSystemItem>>("getSubdirectories")
                 .Argument<NonNullGraphType<StringGraphType>>("path")
                 .ResolveAsync(async context =>
@@ -29,6 +28,17 @@ namespace BlazorApp2.Server.GraphQlApi.GraphQuery
                     return await fileSystemService.GetSubdirectoriesAsync(path);
                 })
                 .Description("Get subdirectories of a given path");
+
+            // Get directory contents
+            This.Field<ListGraphType<FileSystemItemGraphType>, List<FileSystemItem>>("getDirectoryContents")
+                .Argument<NonNullGraphType<StringGraphType>>("path")
+                .ResolveAsync(async context =>
+                {
+                    var fileSystemService = context.RequestServices!.GetRequiredService<IFileSystemService>();
+                    string path = context.GetArgument<string>("path");
+                    return await fileSystemService.GetDirectoryContentsAsync(path);
+                })
+                .Description("Get all contents (folders and files) of a given path");
         }
     }
 }
