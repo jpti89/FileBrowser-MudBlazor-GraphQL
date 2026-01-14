@@ -1,0 +1,24 @@
+﻿@page "/file-explorer-component-usage"
+@rendermode InteractiveServer
+@using BlazorApp2.Server.Blazor.Areas.Demo.Components
+@using BlazorApp2.SharedCode.Models.Partials
+@using BlazorApp2.SharedCode.Models.Enums
+@using MudBlazor
+
+<MudPopoverProvider />
+<MudDialogProvider />
+
+<MudButton Variant="Variant.Filled"
+            Color="Color.Primary"
+            OnClick="@OpenExplorerDialog"
+            Class="mb-4"
+            FullWidth="true">
+    <i class="fa-solid fa-folder-open me-2"></i>
+    Open Explorer Selector
+</MudButton>
+
+<FileExplorerDialog @bind-IsVisible="browserOpen"
+                    FolderContextMenuItems="@folderContextMenu"
+                    OnFolderContextSelect="@OnFolderContextSelect"
+                    OnClose="@OnExplorerClose"
+                    @ref="fileExplorer" />

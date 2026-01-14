@@ -1,0 +1,106 @@
+﻿@inherits ComponentBase
+@inject IFileSystemService FileSystemService
+@using BlazorApp2.Server.Services.BuisnessLogic.Interfaces
+@using BlazorApp2.SharedCode.Models.Partials
+@using MudBlazor
+
+<MudDialog @bind-Visible="IsVisible" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">File Explorer</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid Spacing="2">
+            <MudItem xs="12">
+                <MudPaper Class="pa-2 d-flex align-center gap-2" Elevation="0">
+                    <MudIconButton Icon="@("fa-solid fa-arrow-left")"
+                                   Size="Size.Small"
+                                   Color="Color.Default"
+                                   Disabled="true" />
+                    <MudIconButton Icon="@("fa-solid fa-arrow-right")"
+                                   Size="Size.Small"
+                                   Color="Color.Default"
+                                   Disabled="true" />
+                    <MudIconButton Icon="@("fa-solid fa-arrow-up")"
+                                   Size="Size.Small"
+                                   Color="Color.Default"
+                                   OnClick="NavigateUp" />
+                    <MudIconButton Icon="@("fa-solid fa-arrows-rotate")"
+                                   Size="Size.Small"
+                                   Color="Color.Default"
+                                   OnClick="RefreshCurrentPath" />
+
+                    <MudTextField @bind-Value="currentPath"
+                                  Label="Path"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@("fa-solid fa-pen")"
+                                  Class="flex-grow-1" />
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="NavigateToPath">
+                        Focus Folder
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="3">
+                <MudPaper Class="pa-2" Elevation="0" Style="height: 400px; overflow-y: auto;" Outlined="true">
+                    @if (isLoadingDrives)
+                    {
+                        <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+                    }
+                    else if (drives != null)
+                    {
+                        <MudList Clickable="true" Dense="true" T="string" SelectedValue="selectedDrive" SelectedValueChanged="OnDriveSelected">
+                            @foreach (var drive in drives)
+                            {
+                                <MudListItem T="string" Value="@drive">
+                                    <div class="d-flex align-center">
+                                        <MudIcon Icon="@("fa-regular fa-hard-drive")" Size="Size.Small" Class="mr-2" />
+                                        <MudText>@drive</MudText>
+                                    </div>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="9">
+                <MudPaper Class="pa-2" Elevation="0" Style="height: 400px; overflow-y: auto;" Outlined="true">
+                    @if (treeItems.Any())
+                    {
+                        <MudTreeView T="string"
+                                     SelectedValue="selectedTreeItem"
+                                     SelectedValueChanged="OnSelectedValueChanged"
+                                     ExpandOnClick=true
+                                     Hover="true">
+                            @foreach (var item in treeItems)
+                            {
+                                @RenderTreeNode(item)
+                            }
+                        </MudTreeView>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Select a drive to browse</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-2">@errorMessage</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Close">Done</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+}
