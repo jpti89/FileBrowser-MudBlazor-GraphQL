@@ -28,6 +28,10 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
 
         List<string> extensions = Enum.GetNames(typeof(BrowserFileTypes)).ToList();
 
+        private HashSet<string> includedPaths { get; set; } = new();
+        private HashSet<string> excludedPaths { get; set; } = new();
+        private IEnumerable<string> ExtensionOptions { get; set; } = new HashSet<string>() { };
+
         private async Task OnExplorerSelectorButtonClick()
         {
             await LoadDrives();
@@ -290,17 +294,18 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
 
         private RenderFragment RenderTreeNode(TreeItemData item) => builder =>
         {
+            
+            builder.OpenComponent<MudMenu>(0);
+            builder.AddAttribute(1, "ActivationEvent", MouseEvent.RightClick);
+            builder.AddAttribute(2, "PositionAtCursor", true);
+            builder.AddAttribute(3, "Style", "display: block; width: 100%;");
+            builder.AddAttribute(4, "ActivatorContent", (RenderFragment)(activatorBuilder =>
+            {
+                RenderTreeViewItem(activatorBuilder, item);
+            }));
+
             if (item.IsDirectory)
             {
-                builder.OpenComponent<MudMenu>(0);
-                builder.AddAttribute(1, "ActivationEvent", MouseEvent.RightClick);
-                builder.AddAttribute(2, "PositionAtCursor", true);
-                builder.AddAttribute(3, "Style", "display: block; width: 100%;");
-                builder.AddAttribute(4, "ActivatorContent", (RenderFragment)(activatorBuilder =>
-                {
-                    RenderTreeViewItem(activatorBuilder, item);
-                }));
-
                 builder.AddAttribute(5, "ChildContent", (RenderFragment)(menuBuilder =>
                 {
                     menuBuilder.OpenComponent<MudMenuItem>(0);
@@ -332,7 +337,18 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
             }
             else
             {
-                RenderTreeViewItem(builder, item);
+                builder.AddAttribute(5, "ChildContent", (RenderFragment)(menuBuilder =>
+                {
+                    menuBuilder.OpenComponent<MudMenuItem>(0);
+                    menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs args) => AddToIncludedFromContext(item.FullPath)));
+                    menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>
+                    {
+                        textBuilder.AddContent(0, "Select File");
+                    }));
+                    menuBuilder.CloseComponent();
+                }));
+
+                builder.CloseComponent();
             }
         };
 
