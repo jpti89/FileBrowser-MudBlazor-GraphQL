@@ -19,6 +19,8 @@
 
 <FileExplorerDialog @bind-IsVisible="browserOpen"
                     FolderContextMenuItems="@folderContextMenu"
+                    FileContextMenuItems="@fileContextMenu"
                     OnFolderContextSelect="@OnFolderContextSelect"
                     OnClose="@OnExplorerClose"
-                    @ref="fileExplorer" />
+                    @ref="fileExplorer" 
+                    />

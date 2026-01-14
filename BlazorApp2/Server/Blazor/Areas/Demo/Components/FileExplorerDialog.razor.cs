@@ -322,42 +322,42 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Components
         {
             if ((item.IsDirectory && FolderContextMenuItems.Count() > 0) || (!item.IsDirectory && FileContextMenuItems.Count() > 0))
             { 
-            builder.OpenComponent<MudMenu>(0);
-            builder.AddAttribute(1, "ActivationEvent", MouseEvent.RightClick);
-            builder.AddAttribute(2, "PositionAtCursor", true);
-            builder.AddAttribute(3, "Style", "display: block; width: 100%;");
-            builder.AddAttribute(4, "ActivatorContent", (RenderFragment)(activatorBuilder =>
-            {
-                RenderTreeViewItem(activatorBuilder, item);
-            }));
+                builder.OpenComponent<MudMenu>(0);
+                builder.AddAttribute(1, "ActivationEvent", MouseEvent.RightClick);
+                builder.AddAttribute(2, "PositionAtCursor", true);
+                builder.AddAttribute(3, "Style", "display: block; width: 100%;");
+                builder.AddAttribute(4, "ActivatorContent", (RenderFragment)(activatorBuilder =>
+                {
+                    RenderTreeViewItem(activatorBuilder, item);
+                }));
 
-            builder.AddAttribute(5, "ChildContent", (RenderFragment)(menuBuilder =>
-            {
-                    var childItems = item.IsDirectory ? FolderContextMenuItems : FileContextMenuItems;
-                    for (int i = 0; i < childItems.Count; i++)
-                    {
-                        var menuItem = childItems[i];
-                        var index = i;
+                builder.AddAttribute(5, "ChildContent", (RenderFragment)(menuBuilder =>
+                {
+                        var childItems = item.IsDirectory ? FolderContextMenuItems : FileContextMenuItems;
+                        for (int i = 0; i < childItems.Count; i++)
+                        {
+                            var menuItem = childItems[i];
+                            var index = i;
 
-                        menuBuilder.OpenComponent<MudMenuItem>(index);
-                        menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, async (MouseEventArgs args) =>
-                        {
-                            await HandleContextMenuClick(menuItem.Text, item);
-                        }));
-                        menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>
-                        {
-                            if (!string.IsNullOrEmpty(menuItem.Icon))
+                            menuBuilder.OpenComponent<MudMenuItem>(index);
+                            menuBuilder.AddAttribute(1, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, async (MouseEventArgs args) =>
                             {
-                                textBuilder.OpenElement(0, "i");
-                                textBuilder.AddAttribute(1, "class", $"{menuItem.Icon} me-2");
-                                textBuilder.CloseElement();
-                            }
-                            textBuilder.AddContent(1, menuItem.Text);
-                        }));
-                        menuBuilder.CloseComponent();
-                    }
+                                await HandleContextMenuClick(menuItem.Text, item);
+                            }));
+                            menuBuilder.AddAttribute(2, "ChildContent", (RenderFragment)((textBuilder) =>
+                            {
+                                if (!string.IsNullOrEmpty(menuItem.Icon))
+                                {
+                                    textBuilder.OpenElement(0, "i");
+                                    textBuilder.AddAttribute(1, "class", $"{menuItem.Icon} me-2");
+                                    textBuilder.CloseElement();
+                                }
+                                textBuilder.AddContent(1, menuItem.Text);
+                            }));
+                            menuBuilder.CloseComponent();
+                        }
                 
-            }));
+                }));
                 builder.CloseComponent();
 
             }
@@ -367,14 +367,19 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Components
                 builder.OpenElement(0,"div");
                 builder.AddAttribute(1,"class", "mud-menu");
                 builder.AddAttribute(2, "style", "display: block; width: 100%;");
-                builder.AddMarkupContent(3, @$"
-<div class=""mud -menu-activator"" tabindex=""0"" role=""button"" aria-haspopup=""true"">
-<li class=""mud-treeview-item"">
-<div class=""mud-treeview-item-content cursor-pointer mud-ripple"">    
-<div class=""mud-treeview-item-arrow""></div>
-<div class=""mud-treeview-item-icon"">
-<span class=""mud-icon-root mud-icon-default mud-icon-size-medium {GetFileIcon(item.Extension)}"" aria-hidden=""true"" role=""img""></span></div>
-<p class=""mud-typography mud-typography-body1 mud-treeview-item-label"">{item.Name}</p></div></li></div>");
+                builder.AddAttribute(3, "oncontextmenu",
+                    EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs _) => { }));
+                builder.AddEventPreventDefaultAttribute(4, "oncontextmenu", true);
+                builder.AddEventStopPropagationAttribute(5, "oncontextmenu", true);
+
+                builder.AddMarkupContent(4, @$"
+                                            <div class=""mud -menu-activator"" tabindex=""0"" role=""button"" aria-haspopup=""true"">
+                                            <li class=""mud-treeview-item"">
+                                            <div class=""mud-treeview-item-content cursor-pointer mud-ripple"">    
+                                            <div class=""mud-treeview-item-arrow""></div>
+                                            <div class=""mud-treeview-item-icon"">
+                                            <span class=""mud-icon-root mud-icon-default mud-icon-size-medium {GetFileIcon(item.Extension)}"" aria-hidden=""true"" role=""img""></span></div>
+                                            <p class=""mud-typography mud-typography-body1 mud-treeview-item-label"">{item.Name}</p></div></li></div>");
                 builder.CloseElement();
 
 

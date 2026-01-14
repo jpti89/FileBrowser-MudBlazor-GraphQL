@@ -18,6 +18,11 @@ namespace BlazorApp2.Server.Blazor.Areas.Demo.Views
             new FolderContextMenuItem { Text = "Focus Folder", Icon = "fa-solid fa-magnifying-glass" }
         };
 
+        private List<FolderContextMenuItem> fileContextMenu = new()
+        {
+            new FolderContextMenuItem { Text = "File", Icon = "fa-solid fa-folder-plus" }
+        };
+
         private async Task OpenExplorerDialog()
         {
             browserOpen = true;
